@@ -7,14 +7,14 @@ float to_c(float f) {
 
 int main(void) {
     int from_temp;
-    int to_temp;
+    const int to_temp;
     int step;
 
     printf("F to C table\n");
     printf("From: ");
     scanf("%d", &from_temp);
     printf("To: ");
-    scanf("%d", &to_temp);
+    scanf("%d", (int*)&to_temp);
     printf("Step: ");
     scanf("%d", &step);
 
