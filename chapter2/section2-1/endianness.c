@@ -37,6 +37,25 @@ void show_string(char *x, size_t len) {
     show_bytes((byte_pointer) x, len * sizeof(char));
 }
 
+
+typedef union {
+    short value;
+    char bytes[sizeof(short)];
+} short_bytes;
+
+// Define a bitmap struct
+typedef struct {
+    unsigned int a:1;
+    unsigned int b:1;
+    unsigned int c:1;
+    unsigned int d:1;
+} bitmap;
+
+typedef union {
+    bitmap bits;
+    char byte;
+} bitmap_bytes;
+
 int main(void) {
     int n = 5;
     show_int(n);
@@ -53,5 +72,20 @@ int main(void) {
     // This proves that as long as you deal with the full structure of bytes,
     // since both the mask and the target value are both converted to the
     // appropriate internal representation, the result comes out right.
+
+    short_bytes sb;
+    sb.bytes[0] = 0xff;
+    sb.bytes[1] = 0xa1;
+    show_bytes((byte_pointer) &sb.value, sizeof(short));
+    printf("%d\n", sb.value);
+
+    bitmap_bytes bb;
+    bb.bits.a = 1;
+    bb.bits.b = 0;
+    bb.bits.c = 1;
+    bb.bits.d = 0;
+    printf("%d\n", bb.byte);
+    show_bytes((byte_pointer) &bb.byte, sizeof(char));
+
     return 0;
 }
