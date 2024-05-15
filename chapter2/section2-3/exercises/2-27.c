@@ -7,6 +7,5 @@ int uadd_ok(unsigned x, unsigned y);
 causing overflow. */
 
 int uadd_ok(unsigned x, unsigned y) {
-    unsigned sum = x + y;
-    return sum < x || sum < y;
+    return x + y < x
 }
