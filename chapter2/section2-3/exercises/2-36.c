@@ -7,7 +7,7 @@
 
 int tmult_ok(int32_t x, int32_t y) {
     int64_t prod = (int64_t)x*y;
-    return prod == (int64_t)(int32_t)prod;
+    return prod == (int32_t)prod;
 }
 
 int main(void){
