@@ -14,6 +14,8 @@
 
 #include <stdio.h>
 
+#define BIT_SIZE 8
+
 unsigned replace_byte(unsigned x, int i, unsigned char b);
 
 int main(void) {
@@ -41,4 +43,13 @@ unsigned replace_byte(unsigned x, int i, unsigned char b) {
     byte_p += i;
     *byte_p = b;
     return res;
+}
+
+/* Another solution, using masks */
+unsigned replace_byte_mask(unsigned x, int i, unsigned char b) {
+    if (i < 0 || i >= sizeof x) {
+        return 0;
+    }
+    unsigned mask = ~(0xFF << i * BIT_SIZE);
+    return (x & mask) | (b << i * BIT_SIZE);
 }
