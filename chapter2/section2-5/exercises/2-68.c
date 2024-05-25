@@ -14,7 +14,7 @@ int lower_one_mask(int n);
  */
 
 int lower_one_mask(int n) {
-    return ((1 << (n-1)) << 1) - 1;
+    return (int)((unsigned)~0 >> (8*sizeof(int) - n));
 }
 
 int main(void) {
