@@ -15,11 +15,8 @@ careful of the case n = 0. */
 unsigned rotate_left(unsigned x, int n) {
     /* Mask with all 1s to the right of the n-th bit, inclusive */
     unsigned w = 8*sizeof(unsigned);
-    unsigned mask = (unsigned)(~0) >> n;
-    unsigned right_part = x & mask;
-    unsigned left_part = x & (~mask);
     /* Shift left part in two stages to avoid shifting by w when n == 0 */
-    return ((left_part >> (w - n - 1)) >> 1) | (right_part << n);
+    return ((x >> (w - n - 1)) >> 1) | (x << n);
 }
 
 int main(void) {
