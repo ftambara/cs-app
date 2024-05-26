@@ -15,17 +15,15 @@ int saturating_add(int x, int y);
 
 int saturating_add(int x, int y) {
     size_t w = 8 * sizeof(int);
-    /* -1 if negative, 0 if positive */
-    int sign = (x&y) >> (w-1);
-    int same_sign = ~(x^y) >> (w-1);
-
-    /* -1 if has carry, 0 if it doesn't */
-    int carry = ((x & (~0 >> 1)) + (y & (~0 >> 1))) >> (w-1) & same_sign;
-
-    int pos_overflow = ~sign & carry;
-    int neg_overflow = sign & ~carry;
-    int overflow = pos_overflow | neg_overflow;
-    return (pos_overflow & INT_MAX) | (neg_overflow & INT_MIN) | (~overflow & (x + y));
+    unsigned mask = 1 << (w-1);
+    int sum = x + y;
+    /* positive overflow if x and y are positive but sum isn't */
+    int pos_overflow = !(x & mask) && !(y & mask) && (sum & mask);
+    /* negative overflow if x and y are negative but sum isn't */
+    int neg_overflow = (x & mask) && (y & mask) && !(sum & mask);
+    /* Update sum if necessary */
+    (pos_overflow && (sum = INT_MAX)) || (neg_overflow && (sum = INT_MIN));
+    return sum;
 }
  
 int main(void) {
