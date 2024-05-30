@@ -22,7 +22,7 @@ int float_le(float x, float y) {
     /* Give an expression using only ux, uy, sx, and sy */
     return (
         // Return 1 if both numbers are any kind of zero
-        !((ux & ~sx) & (uy & ~sy))
+        (ux << 1 == 0 && uy << 1 == 0)
         // Return 1 if the exponent bits of ux < exponent bits of uy
         || ((ux & 0x7f800000) < (uy & 0x7f800000))
         // Return 1 if the fraction bits of ux <= fraction bits of uy
