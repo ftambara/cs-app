@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <assert.h>
 #include <limits.h>
 
 typedef unsigned float_bits;
@@ -18,34 +17,39 @@ float_bits float_half(float_bits f);
  * floating-point operations.
  */
 
-#define F_POS_INF 0x7F800000
-#define F_NEG_INF 0xFF800000
+#define F_POS_INF 0x7f800000
+#define F_NEG_INF 0xff800000
 
 float_bits float_half(float_bits f) {
     unsigned sign = f >> 31;
-    unsigned exp = (f >> 23) & 0xFF;
-    unsigned frac = f & 0x7FFFFF;
+    unsigned exp = (f >> 23) & 0xff;
+    unsigned frac = f & 0x7fffff;
 
-    if (exp == 0xFF && f != 0) {
+    if (exp == 0xff) {
+        /* If NaN, return NaN. And if Inf, Inf/2 is still infinity */
         return f;
     }
-    if (exp == 0xFF && frac == 0) {
-        /* Infinity/2 is still infinity */
-        return f;
+
+    /* Round to even bias */
+    unsigned bias;
+    if ((f & 0x3) == 0x3) {
+        bias = 1;
+    } else {
+        bias = 0;
     }
+
     if (exp == 0) {
         /* Denormalized mode */
-        /* Rounding bias is 0 (2^0 - 1), no need to add */
-        frac >>= 1;
+        frac = (frac + bias) >> 1;
     } else if (exp == 1) {
         /* Normalized mode, need to transform to denormalized */
         exp = 0;
         frac |= 0x800000;  // add leading 1
-        /* Add rounding bias (2^1 - 1) and shift
+        /* Add rounding bias (2^2 - 1) and shift
          * one for the new leading one
          * and one for the division
          */
-        frac = (frac + 1) >> 2;
+        frac = (frac + bias) >> 1;
     } else {
         exp--;
     }
@@ -58,24 +62,25 @@ float u2f(unsigned x) {
 
 int main(void) {
     /* Test corner cases */
-    // x = 0
-    printf("float_half(0x00000000): %a\n", u2f(float_half(0x00000000)));
-    // x = +∞
-    printf("float_half(0x7f800000): %a\n", u2f(float_half(0x7f800000)));
-    // x = -∞
-    printf("float_half(0xff800000): %a\n", u2f(float_half(0xff800000)));
-    // smallest subnormal positive subnormal number (x = 2^-149)
-    printf("float_half(0x00000001): %a\n", u2f(float_half(0x00000001)));
-    // smallest subnormal negative subnormal number (x = -2^-149)
-    printf("float_half(0x80000001): %a\n", u2f(float_half(0x80000001)));
-    // smallest positive normal number (x = 2^-126)
-    printf("float_half(0x00800000): %a\n", u2f(float_half(0x00800000)));
-    // one
-    printf("float_half(0x3f800000): %a\n", u2f(float_half(0x3f800000)));
-    // smallest number larger than one (x = 1 + 2^-24)
-    printf("float_half(0x3f800001): %f\n", u2f(float_half(0x3f800001)));
+    unsigned cases[] = {
+        0,           // 0
+        F_POS_INF,   // +∞
+        F_NEG_INF,   // -∞
+        0x00000001,  // smallest subnormal positive subnormal number (2^-149)
+        0x80000001,  // smallest subnormal negative subnormal number (-2^-149)
+        0x00800000,  // smallest positive normal number (2^-126)
+        0x3f800000,  // one
+        0x3f800001,  // smallest number larger than one (1 + 2^-24)
+    };
 
-    /*
+    for (int i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
+        printf("%d: %a == %a: %d\n",
+                i,
+                u2f(cases[i]) * 0.5F,
+                u2f(float_half(cases[i])),
+                u2f(cases[i]) * 0.5F == u2f(float_half(cases[i])));
+    }
+
     unsigned num = 0;
     float f_machine;
     float f_func;
@@ -88,13 +93,15 @@ int main(void) {
         if (f_machine != f_machine) {  // Only true for NaN
             ok = !ok;
         }
-        printf("%a == %a: %d\n", f_machine, f_func, ok);
-        assert(ok);
+        printf("0x%x: %a == %a: %d\n", num, f_machine, f_func, ok);
+        if (!ok) {
+            printf("ERROR\n");
+            return 1;
+        }
         if (num == UINT_MAX) {
             break;
         }
         num++;
     }
-    */
     return 0;
 }
