@@ -18,27 +18,11 @@ float_bits float_i2f(int i);
  * floating-point operations.
  */
 
-#define FLOAT_TOTAL_BITS 32
-#define FLOAT_FRAC_BITS 23
 #define FLOAT_EXP_BIAS 127
-#define INT_TOTAL_BITS 32
 #define INT_MIN_TO_FLOAT_BITS 0xCf000000;
-
-int leftmost_one_pos(unsigned x) {
-    int i;
-    for (i = 0; i < INT_TOTAL_BITS; i++) {
-        x >>= 1;
-        if (x == 0) {
-            return i;
-        }
-    }
-    return -1;
-}
 
 float_bits float_i2f(int i) {
     unsigned sign = 0;
-    unsigned frac;
-    unsigned exp;
     if (i == 0) {
         return 0;
     }
@@ -50,42 +34,27 @@ float_bits float_i2f(int i) {
         i = ~i + 1;
     }
 
-    int left_one_pos = leftmost_one_pos(i);
-
-    const unsigned frac_mask = (1 << FLOAT_FRAC_BITS) - 1;
-    int shift = left_one_pos - FLOAT_FRAC_BITS;
-    if (shift <= 0) {
-        /* There is enough space, no rounding needed */
-        frac = (i << -shift) & frac_mask;
-    } else {
-        /* Calculate rounding bias */
-        const unsigned rounding_mask = 0x3 << (shift - 1);
-        unsigned masked_bits = (i & rounding_mask);
-        int bias;
-        if (masked_bits == rounding_mask) {
-            /* Round towards even or closest int */
-            bias = (1 << shift) - 1;
-        } else {
-            /* Round towards closest int */
-            bias = (1 << (shift - 1)) - 1;
-        }
-        /* Check if masked_bits have changed, which whould mean we
-         * are rounding up */
-        int do_round_up = ((i + bias) && rounding_mask) != masked_bits;
-
-        if (do_round_up) {
-            i = (i + bias);
-            if (!(i & (1 << left_one_pos))) {
-                /* leftmost position has shifted, update values */
-                left_one_pos++;
-                shift++;
-            }
-        }
-        frac = (i >> shift) & frac_mask;
+    unsigned exp = 31 + FLOAT_EXP_BIAS;  // Init with max exp
+    /* Normalize */
+    unsigned msb_mask = 1 << 31;
+    while ((i & msb_mask) == 0) {
+        i <<= 1;
+        exp--;
     }
-    exp = left_one_pos + FLOAT_EXP_BIAS;
 
-    return (sign << 31) | (exp << FLOAT_FRAC_BITS) | frac;
+    unsigned frac = (i >> 8) & 0x7fffff;  /* 23 bits, discard leftmost 1 */
+    printf("frac = 0x%x\n", frac);
+    unsigned residue = i & 0xFF;
+    if (residue > 0x80 || ((frac & 1) && residue == 0x80)) {
+        frac++;
+        printf("frac = 0x%x\n", frac);
+        if (frac > 0x7fffff) {
+            /* discard leftmost 1 again */
+            frac = (frac & 0x7fffff) >> 1;
+            exp++;
+        }
+    }
+    return (sign << 31) | (exp << 23) | frac;
 }
 
 float u2f(unsigned x) {
