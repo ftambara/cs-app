@@ -25,7 +25,7 @@ int float_f2i(float_bits f);
 #define FLOAT_TOTAL_BITS 32
 #define FLOAT_FRAC_BITS 23
 #define FLOAT_EXP_BIAS 127
-#define INT_TOTAL_BITS 31
+#define INT_TOTAL_BITS 32
 #define F_POS_INF 0x7f800000
 #define F_NEG_INF 0xff800000
 #define F2I_ERROR_RESULT 0x80000000
