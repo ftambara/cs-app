@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <assert.h>
 #include <limits.h>
 
 typedef unsigned float_bits;
@@ -18,19 +17,19 @@ float_bits float_twice(float_bits f);
  * floating-point operations.
  */
 
-#define F_POS_INF 0x7F800000
-#define F_NEG_INF 0xFF800000
-#define F_NORMAL_MAX_EXP 0xFE
+#define F_POS_INF 0x7f800000
+#define F_NEG_INF 0xff800000
+#define F_NORMAL_MAX_EXP 0xfe
 
 float_bits float_twice(float_bits f) {
     unsigned sign = f >> 31;
-    unsigned exp = (f >> 23) & 0xFF;
-    unsigned frac = f & 0x7FFFFF;
+    unsigned exp = (f >> 23) & 0xff;
+    unsigned frac = f & 0x7fffff;
 
-    if (exp == 0xFF && f != 0) {
+    if (exp == 0xff) {
         return f;
     }
-    if (exp == F_NORMAL_MAX_EXP || (exp == 0xFF && frac == 0)) {
+    if (exp == F_NORMAL_MAX_EXP) {
         /* overflow */
         if (sign == 0) {
             return F_POS_INF;
@@ -60,20 +59,22 @@ float u2f(unsigned x) {
 
 int main(void) {
     /* Test corner cases */
-    /*
-    // x = 0
-    printf("float_twice(0x00000000): %a\n", u2f(float_twice(0x00000000)));
-    // x = +∞
-    printf("float_twice(0x7f800000): %a\n", u2f(float_twice(0x7f800000)));
-    // x = -∞
-    printf("float_twice(0xff800000): %a\n", u2f(float_twice(0xff800000)));
-    // largest subnormal number (x = 2^-126 * (1 - 2^-23))
-    printf("float_twice(0x007fffff): %a\n", u2f(float_twice(0x007fffff)));
-    // largest normal number (x = 2^127 * (1 - 2^-23))
-    printf("float_twice(0x7f7fffff): %a\n", u2f(float_twice(0x7f7fffff)));
-    // largest number less than one (x = 1 - 2^-24)
-    printf("float_twice(0x3f7fffff): %a\n", u2f(float_twice(0x3f7fffff)));
-    */
+    unsigned cases[] = {
+        0,           // 0
+        F_POS_INF,   // +∞
+        F_NEG_INF,   // -∞
+        0x007fffff,  // largest subnormal number
+        0x7f7fffff,  // largest normal number
+        0x3f7fffff,   // largest number less than one
+    };
+
+    for (int i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
+        printf("%d: %a == %a: %d\n",
+                i,
+                u2f(cases[i]) * 2.0F,
+                u2f(float_twice(cases[i])),
+                u2f(cases[i]) * 2.0F == u2f(float_twice(cases[i])));
+    }
 
     unsigned num = 0;
     float f_machine;
@@ -87,7 +88,10 @@ int main(void) {
             ok = !ok;
         }
         printf("%a == %a: %d\n", f_machine, f_func, ok);
-        assert(ok);
+        if (!ok) {
+            printf("ERROR\n");
+            return 1;
+        }
         if (num == UINT_MAX) {
             break;
         }
