@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -o errexit
+
+# Read either from stdin or from a file
+if [ $# -eq 0 ]; then
+    file=$(mktemp)
+    cat > $file
+else
+    file=$1
+fi
+
+tmpout=$(mktemp)
+
+as -o $tmpout $file
+objdump -M intel -d $tmpout
