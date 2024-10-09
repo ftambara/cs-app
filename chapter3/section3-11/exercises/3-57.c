@@ -30,7 +30,7 @@ double funct3(int *ap, double b, long c, float *dp);
 double funct3(int *ap, double b, long c, float *dp) {
     /*
      *  1   funct3:
-     *  2       vmovss (%rdx), %xmm1                xmm1 = (float) *dp
+     *  2       vmovss (%rdx), %xmm1                xmm1 = *dp
      *  3       vcvtsi2sd (%rdi), %xmm2, %xmm2      xmm2 = (double) *ap
      *  4       vucomisd %xmm2, %xmm0               compare xmm2 to b
      *  5       jbe .L8                             
@@ -40,15 +40,15 @@ double funct3(int *ap, double b, long c, float *dp) {
      *  9       vcvtps2pd %xmm1, %xmm0              return (double) xmm1
      *  10      ret
      *  11  .L8:                                    if b <= (double) *ap
-     *  12      vaddss %xmm1, %xmm1, %xmm1          xmm1 += (float) *dp
+     *  12      vaddss %xmm1, %xmm1, %xmm1          xmm1 += *dp
      *  13      vcvtsi2ssq %rsi, %xmm0, %xmm0       xmm0 = (float) c
-     *  14      vaddss %xmm1, %xmm0, %xmm0          xmm0 += 2 * (float) * dp
+     *  14      vaddss %xmm1, %xmm0, %xmm0          xmm0 = (float) c + 2 * *dp
      *  15      vunpcklps %xmm0, %xmm0, %xmm0
      *  16      vcvtps2pd %xmm0, %xmm0              return (double) xmm0
      *  17  ret
      */
     if (b <= (double) *ap) {
-        return (double) (2 * (float) * dp);
+        return (float) c + 2 * *dp;
     }
-    return (double) ((float) *dp * (float) c);
+    return *dp * (float) c;
 }
