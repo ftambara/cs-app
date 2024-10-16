@@ -14,6 +14,10 @@
  * rather than one of the jump instructions.
  */
 
-long cread_alt(long x, _Bool is_set) {
-    return is_set ? x : 0;
+long cread_alt(long *xp) {
+    long zero = 0;
+    if (!xp) {
+        xp = &zero;
+    }
+    return *xp;
 }

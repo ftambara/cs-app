@@ -7,8 +7,10 @@ cread_alt:
 .LFB0:
 	.cfi_startproc
 	xorl	%eax, %eax
-	testb	%sil, %sil
-	cmovne	%rdi, %rax
+	testq	%rdi, %rdi
+	je	.L1
+	movq	(%rdi), %rax
+.L1:
 	ret
 	.cfi_endproc
 .LFE0:
